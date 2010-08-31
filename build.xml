@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="main">
+    <target name="main" depends="compile, jar" description="Main target">
+        <echo>
+            Building the .jar file.
+        </echo>
+    </target>
+  
+    <target name="compile" description="Compilation target">
+        <javac srcdir="src" destdir="bin"/>
+    </target>
+  
+  <target name="jar" description="jar target">
+        <jar jarfile="lib/high-scale-lib.jar" basedir="bin/" includes="org/**/*.class" />
+  </target>
+</project>

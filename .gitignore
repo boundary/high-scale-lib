@@ -1,0 +1,5 @@
+.classpath
+.cvsignore
+.project
+bin/*
+lib/*
