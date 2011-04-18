@@ -1,16 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project default="main">
+<project default="main" name="high-scale-lib" xmlns:ivy="antlib:org.apache.ivy.ant">
+	
+    <property name="ivy.version" value="2.2.0" />
+    <property name="ivy.url"
+              value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
+	
+	<property file="publish.properties"/>
+	
+    <property name="basedir" value="."/>
+    <property name="build.src" value="${basedir}/src"/>
+    <property name="build.src.java" value="${basedir}/src/java"/>
+    <property name="build.lib" value="${basedir}/lib"/>
+    <property name="build.dir" value="${basedir}/build"/>
+    <property name="build.dir.lib" value="${basedir}/build/lib"/>
+    <property name="build.classes" value="${build.dir}/classes"/>
+    <property name="dist.dir" value="${build.dir}/dist"/>
+	
+    <path id="autoivy.classpath">
+        <fileset dir="${build.dir.lib}">
+          <include name="**/*.jar" />
+        </fileset>
+        <pathelement location="${build.dir}/ivy-${ivy.version}.jar"/>
+    </path>
+	
+    <target name="ivy-download" unless="ivy.jar.exists">
+      <echo>Downloading Ivy...</echo>
+      <mkdir dir="${build.dir}" />
+      <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
+           dest="${build.dir}/ivy-${ivy.version}.jar" usetimestamp="true" />
+    </target>
+	
+    <target name="ivy-init" depends="ivy-download" unless="ivy.initialized">
+      <mkdir dir="${build.dir.lib}"/>
+      <taskdef resource="org/apache/ivy/ant/antlib.xml"
+               uri="antlib:org.apache.ivy.ant"
+               classpathref="autoivy.classpath"/>
+      <property name="ivy.initialized" value="true"/>
+    </target>
+
+    <target name="ivy-retrieve-build" depends="ivy-init, resolve">
+      <ivy:retrieve type="jar,source" sync="true"
+             pattern="${build.dir.lib}/[type]s/[artifact]-[revision].[ext]" />
+    </target>
+	
+	<target name="resolve">
+	  <ivy:resolve file="ivy.xml" revision="${version}"/>
+	</target>
+	
     <target name="main" depends="compile, jar" description="Main target">
         <echo>
             Building the .jar file.
         </echo>
     </target>
   
-    <target name="compile" description="Compilation target">
+    <target name="compile" depends="ivy-retrieve-build" description="Compilation target">
         <javac srcdir="src" destdir="bin"/>
     </target>
   
-  <target name="jar" description="jar target">
-        <jar jarfile="lib/high-scale-lib.jar" basedir="bin/" includes="org/**/*.class" />
+  <target name="gen-pom" depends="ivy-init">
+	<ivy:makepom ivyfile="ivy.xml" pomfile="${dist.dir}/${ant.project.name}.pom">
+  	  <mapping conf="default" scope="compile"/>
+  	</ivy:makepom>
+  </target>
+	
+  <target name="jar" description="jar target" depends="compile">
+        <jar jarfile="${dist.dir}/high-scale-lib.jar" basedir="bin/" includes="org/**/*.class" />
+  </target>
+	
+  <target name="publish" description="publish jar to artifactory" depends="jar, gen-pom">
+	<ivy:publish resolver="artifactory-publish" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
+  	  <artifacts pattern="${dist.dir}/[artifact].[ext]"/>
+		
+	<artifact name="${ivy.module}" ext="pom" type="pom"/>
+  	</ivy:publish>
   </target>
 </project>
