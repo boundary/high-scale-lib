@@ -3,7 +3,7 @@
 	<properties file="publish.properties"/>
 
 	<settings defaultResolver="main"/>
-	<credentials host="maven.boundary.com" realm="Artifactory Realm" username="admin" passwd="^#vu2@oNpRMh"/> 
+	<credentials host="maven.boundary.com" realm="Artifactory Realm" username="${username}" passwd="${password}"/> 
 	<resolvers>
 		<chain name="main">
 			<url name="artifactory-publish" m2compatible="true">
