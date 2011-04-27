@@ -344,7 +344,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
    *  @throws NullPointerException if the specified key or value is null */
   public boolean replace    ( TypeK  key, TypeV  oldValue, TypeV newValue ) {
 	  final Object out = putIfMatch(key, newValue, oldValue);
-	  return (val == null) ? out == oldValue : oldValue.equals(out);
+	  return (oldValue == null) ? out == oldValue : oldValue.equals(out);
   }
 
   private final TypeV putIfMatch( Object key, Object newVal, Object oldVal ) {
