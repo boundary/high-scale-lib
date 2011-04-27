@@ -10,9 +10,8 @@
     <property name="basedir" value="."/>
     <property name="build.src" value="${basedir}/src"/>
     <property name="build.src.java" value="${basedir}/src/java"/>
-    <property name="build.lib" value="${basedir}/lib"/>
     <property name="build.dir" value="${basedir}/build"/>
-    <property name="build.dir.lib" value="${basedir}/build/lib"/>
+    <property name="build.dir.lib" value="${build.dir}/lib"/>
     <property name="build.classes" value="${build.dir}/classes"/>
     <property name="dist.dir" value="${build.dir}/dist"/>
 	
@@ -23,15 +22,20 @@
         <pathelement location="${build.dir}/ivy-${ivy.version}.jar"/>
     </path>
 	
-    <target name="ivy-download" unless="ivy.jar.exists">
+	<target name="init">
+	  <mkdir dir="${build.dir}"/>
+	  <mkdir dir="${build.dir.lib}"/>
+	  <mkdir dir="${build.classes}"/>
+	  <mkdir dir="${dist.dir}"/>
+	</target>
+	
+    <target name="ivy-download" depends="init" unless="ivy.jar.exists">
       <echo>Downloading Ivy...</echo>
-      <mkdir dir="${build.dir}" />
       <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
-           dest="${build.dir}/ivy-${ivy.version}.jar" usetimestamp="true" />
+           dest="${build.dir.lib}/ivy-${ivy.version}.jar" usetimestamp="true" />
     </target>
 	
     <target name="ivy-init" depends="ivy-download" unless="ivy.initialized">
-      <mkdir dir="${build.dir.lib}"/>
       <taskdef resource="org/apache/ivy/ant/antlib.xml"
                uri="antlib:org.apache.ivy.ant"
                classpathref="autoivy.classpath"/>
@@ -54,7 +58,7 @@
     </target>
   
     <target name="compile" depends="ivy-retrieve-build" description="Compilation target">
-        <javac srcdir="src" destdir="bin"/>
+        <javac srcdir="src" destdir="${build.classes}"/>
     </target>
   
   <target name="gen-pom" depends="ivy-init">
@@ -64,7 +68,7 @@
   </target>
 	
   <target name="jar" description="jar target" depends="compile">
-        <jar jarfile="${dist.dir}/high-scale-lib.jar" basedir="bin/" includes="org/**/*.class" />
+        <jar jarfile="${dist.dir}/high-scale-lib.jar" basedir="${build.classes}" includes="org/**/*.class" />
   </target>
 	
   <target name="publish" description="publish jar to artifactory" depends="jar, gen-pom">
@@ -73,5 +77,21 @@
 		
 	<artifact name="${ivy.module}" ext="pom" type="pom"/>
   	</ivy:publish>
+  </target>
+	
+  <target name="publish-local" description="publish jar to the local repo" depends="jar">
+	<ivy:publish resolver="local" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
+  	  <artifacts pattern="${dist.dir}/[artifact].[ext]"/>
+  	</ivy:publish>
+  </target>
+	
+  <target name="clean" description="get rid of any build artifacts">
+	<delete dir="${dist.dir}" />
+  	<delete dir="${build.dir}" />
+  	<delete dir="doc" />
+  </target>
+	
+  <target name="javadoc" description="generate the docs">
+	<javadoc sourcepath="src" destdir="doc"/>
   </target>
 </project>
