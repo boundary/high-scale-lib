@@ -331,7 +331,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
    *  @throws NullPointerException if the specified key or value is null */
   public boolean remove     ( Object key,Object val ) { 
 	  final Object out = putIfMatch(key, TOMBSTONE, val);
-	  return (out == null) ? out == val : out.equals(val); 
+	  return (val == null) ? out == val : val.equals(out); 
   }
 
   /** Atomically do a <code>put(key,val)</code> if-and-only-if the key is
@@ -344,7 +344,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
    *  @throws NullPointerException if the specified key or value is null */
   public boolean replace    ( TypeK  key, TypeV  oldValue, TypeV newValue ) {
 	  final Object out = putIfMatch(key, newValue, oldValue);
-	  return (out == null) ? out == oldValue : out.equals(oldValue);
+	  return (val == null) ? out == oldValue : oldValue.equals(out);
   }
 
   private final TypeV putIfMatch( Object key, Object newVal, Object oldVal ) {
