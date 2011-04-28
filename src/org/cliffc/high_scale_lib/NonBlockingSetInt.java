@@ -64,6 +64,10 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
     _nbsi = new NBSI(63, new Counter(), this); // The initial 1-word set
   }
 
+  private NonBlockingSetInt(NonBlockingSetInt a, NonBlockingSetInt b) {
+    _nbsi = new NBSI(a._nbsi,b._nbsi,new Counter(),this);
+  }
+
   /** 
    * Add {@code i} to the set.  Uppercase {@link Integer} version of add,
    * requires auto-unboxing.  When possible use the {@code int} version of
@@ -131,6 +135,24 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
     NBSI cleared = new NBSI(63, new Counter(), this); // An empty initial NBSI
     while( !CAS_nbsi( _nbsi, cleared ) ) // Spin until clear works
       ;
+  }
+
+  /*****************************************************************
+   *
+   * bitwise comparisons optimised for NBSI
+   *
+   *****************************************************************/
+
+  public NonBlockingSetInt and(final NonBlockingSetInt op) {
+    NonBlockingSetInt res = new NonBlockingSetInt(this,op);
+    res._nbsi.and(res._nbsi,this._nbsi,op._nbsi);
+    return res;
+  }
+
+  public NonBlockingSetInt or(final NonBlockingSetInt op) {
+    NonBlockingSetInt res = new NonBlockingSetInt(this,op);
+    res._nbsi.or(res._nbsi,this._nbsi,op._nbsi);
+    return res;
   }
 
   /** Verbose printout of internal structure for debugging. */
@@ -262,7 +284,40 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       _nbsi64 = ((max_elem+1)>>>6) == 0 ? null : new NBSI((max_elem+1)>>>6, null, null);
       _sum_bits_length = _bits.length + (_nbsi64==null ? 0 : _nbsi64._sum_bits_length);
     }
-    
+
+    /** built a new NBSI with buffers large enough to hold bitwise operations on the operands **/
+    private NBSI(NBSI a, NBSI b, Counter ctr, NonBlockingSetInt nonb) {
+      super();
+      _non_blocking_set_int = nonb;
+      _size = ctr;
+      _copyIdx  = ctr == null ? null : new AtomicInteger();
+      _copyDone = ctr == null ? null : new AtomicInteger();
+
+      if(!has_bits(a) && !has_bits(b)) {
+        _bits = null;
+        _nbsi64 = null;
+        _sum_bits_length = 0;
+        return;
+      }
+
+      if(!has_bits(a)) {
+        _bits = new long[b._bits.length];
+        _nbsi64 = new NBSI(null,b._nbsi64,null,null);
+      } else if(!has_bits(b)) {
+        _bits = new long[a._bits.length];
+        _nbsi64 = new NBSI(null,a._nbsi64,null,null);
+      } else {
+        int bit_length = a._bits.length > b._bits.length ? a._bits.length : b._bits.length;
+        _bits = new long[bit_length];
+        _nbsi64 = new NBSI(a._nbsi64,b._nbsi64,null,null);
+      }
+      _sum_bits_length = _bits.length + _nbsi64._sum_bits_length;
+    }
+
+    private static boolean has_bits(NBSI n) {
+      return n != null && n._bits != null;
+    }
+
     // Lower-case 'int' versions - no autoboxing, very fast.
     // 'i' is known positive.
     public boolean add( final int i ) {
@@ -338,7 +393,55 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       // Yes mutable: test & return bit
       return (old & mask) != 0; 
     }
-    
+
+    /**
+     * Bitwise AND together two NBSIs, storing the result in this instance.
+     * Assumes that this instance contains ample buffer space to store the largest
+     * buffer from each NBSI in the recursive bitmap.
+     *
+     * Also assumes that this method is called during the construction process of
+     * the bitset before the instance could be leaked to multiple threads.
+     ***/
+    public boolean and(NBSI dest, NBSI a, NBSI b) {
+      // terminate recursion if one bitset is missing data
+      // since that word should be left as 0L anyway
+      if(!has_bits(a) || !has_bits(b))
+        return true;
+      for(int i = 0; i < dest._bits.length; i++) {
+        long left   = a.safe_read_word(i,0L);
+        long right  = b.safe_read_word(i,0L);
+        dest._bits[i] = (left & right) & Long.MAX_VALUE; // mask sign bit
+      }
+      // todo - recompute size
+      return and(dest._nbsi64,a._nbsi64,b._nbsi64);
+    }
+
+    public boolean or(NBSI dest, NBSI a, NBSI b) {
+      // terminate recursion if neiter bitset has data
+      if(!has_bits(a) && !has_bits(b))
+        return true;
+      if(has_bits(a) || has_bits(b)) {
+        for(int i = 0; i < dest._bits.length; i++) {
+          long left   = a.safe_read_word(i,0);
+          long right  = b.safe_read_word(i,0);
+          dest._bits[i] = (left | right) & Long.MAX_VALUE;
+        }
+      }
+      return or(dest._nbsi64,a._nbsi64,b._nbsi64);
+    }
+
+    private long safe_read_word(int i, long default_word) {
+      if(i >= _bits.length) {
+        // allow reading past the end of the buffer filling in a default word
+        return default_word;
+      }
+      long word = _bits[i];
+      if(word < 0) {
+        word = help_copy_impl(i).help_copy()._bits[i];
+      }
+      return word;
+    }
+
     public int size() { return (int)_size.get(); }
 
     // Must grow the current array to hold an element of size i
