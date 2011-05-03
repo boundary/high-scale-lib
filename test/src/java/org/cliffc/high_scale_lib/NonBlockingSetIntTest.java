@@ -3,7 +3,6 @@ package org.cliffc.high_scale_lib;
 import junit.framework.TestCase;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Iterator;
 
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -55,13 +54,6 @@ public class NonBlockingSetIntTest extends TestCase {
 
     c.and(new NonBlockingSetInt());
     new NonBlockingSetInt().and(c);
-
-    // todo - test transitive and reciprocal properties of bitset operations are upheld
-
-    System.out.println(a);
-    System.out.println(b);
-    System.out.println(c);
-    System.out.println(d);
   }
 
   private NonBlockingSetInt _nbsi;
