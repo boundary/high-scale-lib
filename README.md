@@ -1,9 +1,42 @@
+This is Boundary's fork of Cliff Click's high scale lib.  We will be maintaining this fork with bug fixes, improvements and versioned builds in our public maven repository.  
+
+To use high scale lib from ivy add the following to your resolver chain in ivysettings.xml:
+
+    <url name="boundary" m2compatible="true">
+      <artifact pattern="http://maven.boundary.com/repo/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]" />
+      <ivy pattern="http://maven.boundary.com/repo/[organization]/[module]/[revision]/ivy-[module].xml" />
+    </url>
+  
+and declare the dependency in ivy.xml:
+
+    <dependency
+      org="com.boundary"
+      name="high-scale-lib"
+      rev="1.0.2" />
+    
+From maven simply add the repository to the repositories element:
+
+    <repository>
+      <id>boundary-site</id>
+      <url>http://maven.boundary.com/repo</url>
+    </repository>
+  
+and then add the dependency to the dependencies element:
+
+    <dependency>
+      <groupId>com.boundary</groupId>
+      <artifactId>high-scale-lib</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
+Original README
+---------------
 
 IF YOU ARE LOOKING for the drop-in replacement for java.util.Hashtable, it's
 in the lib directory, lib/java_util_hashtable.jar.  It needs to be in your
 bootclasspath.  Example:
 
-  java -Xbootclasspath/p:lib/java_util_hashtable.jar my_java_app_goes_here
+    java -Xbootclasspath/p:lib/java_util_hashtable.jar my_java_app_goes_here
 
 
 ---
@@ -31,11 +64,11 @@ class-path hacks can be done.
 To replace the JDK implementation of Hashtable with a non-blocking version of
 Hashtable, add java_util_hashtable.jar to your java launch line:
 
-  java -Xbootclasspath/p:lib/java_util_hashtable.jar my_app_goes_here
+    java -Xbootclasspath/p:lib/java_util_hashtable.jar my_app_goes_here
 
 Similarly for ConcurrentHashMap, add java_util_concurrent_chm.jar:
 
-  java -Xbootclasspath/p:lib/java_util_concurrent_chm.jar my_app_goes_here
+    java -Xbootclasspath/p:lib/java_util_concurrent_chm.jar my_app_goes_here
 
 
 The other utilities do not have direct JDK replacements; you need to call them
