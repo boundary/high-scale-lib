@@ -30,15 +30,15 @@ public class NonBlockingSetIntTest extends TestCase {
     }
 
     // c should contain the empty set since a and b are disjoint
-    NonBlockingSetInt c = a.and(b);
-    NonBlockingSetInt d = b.and(a);
+    NonBlockingSetInt c = a.intersect(b);
+    NonBlockingSetInt d = b.intersect(a);
     for(int i = 0; i < max; i++) {
       assertFalse(c.contains(i));
       assertFalse(d.contains(i));
     }
 
-    c = a.or(b);
-    d = b.or(a);
+    c = a.union(b);
+    d = b.union(a);
     for(int i = 0; i < max; i++) {
       assertTrue(c.contains(i));
       assertTrue(d.contains(i));
@@ -52,8 +52,8 @@ public class NonBlockingSetIntTest extends TestCase {
       assertTrue(d.contains(i));
     }
 
-    c.and(new NonBlockingSetInt());
-    new NonBlockingSetInt().and(c);
+    c.intersect(new NonBlockingSetInt());
+    new NonBlockingSetInt().intersect(c);
   }
 
   private NonBlockingSetInt _nbsi;

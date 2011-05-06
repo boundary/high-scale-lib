@@ -1,86 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="main" name="high-scale-lib" xmlns:ivy="antlib:org.apache.ivy.ant">
 	
-    <property name="ivy.version" value="2.2.0" />
-    <property name="ivy.url"
-              value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
+  <property name="ivy.version" value="2.2.0" />
+  <property name="ivy.url"
+            value="http://repo2.maven.org/maven2/org/apache/ivy/ivy" />
 	
 	<property file="publish.properties"/>
 	
-    <property name="basedir" value="."/>
-    <property name="build.src" value="${basedir}/src"/>
-    <property name="build.src.java" value="${basedir}/src/java"/>
-    <property name="build.dir" value="${basedir}/build"/>
-    <property name="build.dir.lib" value="${build.dir}/lib"/>
-    <property name="build.classes" value="${build.dir}/classes"/>
-    <property name="dist.dir" value="${build.dir}/dist"/>
-	
-    <path id="autoivy.classpath">
-        <fileset dir="${build.dir.lib}">
-          <include name="**/*.jar" />
-        </fileset>
-        <pathelement location="${build.dir}/ivy-${ivy.version}.jar"/>
-    </path>
-	
+  <property name="basedir" value="."/>
+  <property name="build.src" value="${basedir}/src"/>
+  <property name="build.src.java" value="${basedir}/src/main/java"/>
+  <property name="build.src.test.java" value="${basedir}/src/test/java"/>
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="build.dir.lib" value="${build.dir}/lib"/>
+  <property name="build.classes" value="${build.dir}/classes"/>
+  <property name="build.testclasses" value="${build.dir}/test-classes"/>
+  <property name="dist.dir" value="${build.dir}/dist"/>
+
+  <path id="autoivy.classpath">
+    <fileset dir="${build.dir.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <pathelement location="${build.dir}/ivy-${ivy.version}.jar"/>
+  </path>
+
+  <path id="test.compile.classpath">
+    <path refid="autoivy.classpath"/>
+    <pathelement location="${build.classes}"/>
+  </path>
+
+  <path id="test.classpath">
+    <path refid="test.compile.classpath"/>
+    <pathelement location="${build.classes}"/>
+    <pathelement location="${build.testclasses}"/>
+  </path>
+
 	<target name="init">
 	  <mkdir dir="${build.dir}"/>
 	  <mkdir dir="${build.dir.lib}"/>
 	  <mkdir dir="${build.classes}"/>
+    <mkdir dir="${build.testclasses}"/>
 	  <mkdir dir="${dist.dir}"/>
 	</target>
 	
-    <target name="ivy-download" depends="init" unless="ivy.jar.exists">
-      <echo>Downloading Ivy...</echo>
-      <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
-           dest="${build.dir.lib}/ivy-${ivy.version}.jar" usetimestamp="true" />
-    </target>
-	
-    <target name="ivy-init" depends="ivy-download" unless="ivy.initialized">
-      <taskdef resource="org/apache/ivy/ant/antlib.xml"
-               uri="antlib:org.apache.ivy.ant"
-               classpathref="autoivy.classpath"/>
-      <property name="ivy.initialized" value="true"/>
-    </target>
+  <target name="ivy-download" depends="init" unless="ivy.jar.exists">
+    <echo>Downloading Ivy...</echo>
+    <get src="${ivy.url}/${ivy.version}/ivy-${ivy.version}.jar"
+         dest="${build.dir.lib}/ivy-${ivy.version}.jar" usetimestamp="true" />
+  </target>
 
-    <target name="ivy-retrieve-build" depends="ivy-init, resolve">
-      <ivy:retrieve type="jar,source" sync="true"
-             pattern="${build.dir.lib}/[type]s/[artifact]-[revision].[ext]" />
-    </target>
+  <target name="ivy-init" depends="ivy-download" unless="ivy.initialized">
+    <taskdef resource="org/apache/ivy/ant/antlib.xml"
+             uri="antlib:org.apache.ivy.ant"
+             classpathref="autoivy.classpath"/>
+    <property name="ivy.initialized" value="true"/>
+  </target>
+
+  <target name="ivy-retrieve-build" depends="ivy-init, resolve">
+    <ivy:retrieve type="jar,source" pattern="${build.dir.lib}/[type]s/[artifact].[ext]"/>
+  </target>
 	
 	<target name="resolve">
 	  <ivy:resolve file="ivy.xml" revision="${version}"/>
 	</target>
 	
-    <target name="main" depends="compile, jar" description="Main target">
-        <echo>
-            Building the .jar file.
-        </echo>
-    </target>
-  
-    <target name="compile" depends="ivy-retrieve-build" description="Compilation target">
-        <javac srcdir="src" destdir="${build.classes}"/>
-    </target>
+  <target name="main" depends="compile, jar" description="Main target">
+      <echo>
+          Building the .jar file.
+      </echo>
+  </target>
+
+  <target name="compile" depends="ivy-retrieve-build" description="Compilation target">
+      <javac srcdir="${build.src.java}" destdir="${build.classes}"/>
+  </target>
   
   <target name="gen-pom" depends="ivy-init">
-	<ivy:makepom ivyfile="ivy.xml" pomfile="${dist.dir}/${ant.project.name}.pom">
-  	  <mapping conf="default" scope="compile"/>
+	  <ivy:makepom ivyfile="ivy.xml" pomfile="${dist.dir}/${ant.project.name}.pom">
+  	    <mapping conf="default" scope="compile"/>
   	</ivy:makepom>
   </target>
 	
   <target name="jar" description="jar target" depends="compile">
-        <jar jarfile="${dist.dir}/high-scale-lib.jar" basedir="${build.classes}" includes="org/**/*.class" />
+    <jar jarfile="${dist.dir}/high-scale-lib.jar" basedir="${build.classes}" includes="org/**/*.class" />
   </target>
-	
+
+  <target name="compile-tests" depends="compile">
+    <javac srcdir="${build.src.test.java}" destdir="${build.testclasses}">
+      <classpath refid="test.compile.classpath"/>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile-tests" description="run unit tests">
+    <junit>
+      <classpath refid="test.classpath"/>
+      <test name="org.cliffc.high_scale_lib.HighScaleLibTestSuite"/>
+    </junit>
+  </target>
+
   <target name="publish" description="publish jar to artifactory" depends="jar, gen-pom">
-	<ivy:publish resolver="artifactory-publish" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
+	  <ivy:publish resolver="artifactory-publish" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
   	  <artifacts pattern="${dist.dir}/[artifact].[ext]"/>
-		
-	<artifact name="${ivy.module}" ext="pom" type="pom"/>
+	    <artifact name="${ivy.module}" ext="pom" type="pom"/>
   	</ivy:publish>
   </target>
 	
   <target name="publish-local" description="publish jar to the local repo" depends="jar">
-	<ivy:publish resolver="local" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
+	  <ivy:publish resolver="local" overwrite="true" organisation="${organization}" module="${module}" revision="${version}">
   	  <artifacts pattern="${dist.dir}/[artifact].[ext]"/>
   	</ivy:publish>
   </target>
@@ -88,10 +113,10 @@
   <target name="clean" description="get rid of any build artifacts">
 	<delete dir="${dist.dir}" />
   	<delete dir="${build.dir}" />
-  	<delete dir="doc" />
+  	<delete dir="doc"/>
   </target>
 	
   <target name="javadoc" description="generate the docs">
-	<javadoc sourcepath="src" destdir="doc"/>
+	  <javadoc sourcepath="src" destdir="doc"/>
   </target>
 </project>

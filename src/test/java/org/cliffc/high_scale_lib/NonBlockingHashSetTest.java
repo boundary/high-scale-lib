@@ -1,3 +1,5 @@
+package org.cliffc.high_scale_lib;
+
 /*
  * Written by Cliff Click and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
@@ -7,15 +9,11 @@
 import java.io.*;
 import java.util.*;
 import junit.framework.TestCase;
-import org.cliffc.high_scale_lib.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 // Test NonBlockingHashSet via JUnit
-public class nbhs_tester extends TestCase {
-  public static void main(String args[]) {
-    org.junit.runner.JUnitCore.main("Testing.NBHS_Tester.nbhs_tester");
-  }
+public class NonBlockingHashSetTest extends TestCase {
 
   private NonBlockingHashSet<String> _nbhs;
   protected void setUp   () { _nbhs = new NonBlockingHashSet<String>(); }

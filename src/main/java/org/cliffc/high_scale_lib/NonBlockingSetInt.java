@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import sun.misc.Unsafe;
 
@@ -145,15 +144,15 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    *
    *****************************************************************/
 
-  public NonBlockingSetInt and(final NonBlockingSetInt op) {
+  public NonBlockingSetInt intersect(final NonBlockingSetInt op) {
     NonBlockingSetInt res = new NonBlockingSetInt(this,op);
-    res._nbsi.and(res._nbsi,this._nbsi,op._nbsi);
+    res._nbsi.intersect(res._nbsi, this._nbsi, op._nbsi);
     return res;
   }
 
-  public NonBlockingSetInt or(final NonBlockingSetInt op) {
+  public NonBlockingSetInt union(final NonBlockingSetInt op) {
     NonBlockingSetInt res = new NonBlockingSetInt(this,op);
-    res._nbsi.or(res._nbsi,this._nbsi,op._nbsi);
+    res._nbsi.union(res._nbsi, this._nbsi, op._nbsi);
     return res;
   }
 
@@ -425,14 +424,14 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
     }
 
     /**
-     * Bitwise AND together two NBSIs, storing the result in this instance.
+     * Bitwise operations which store the result in this instance.
      * Assumes that this instance contains ample buffer space to store the largest
      * buffer from each NBSI in the recursive bitmap.
      *
      * Also assumes that this method is called during the construction process of
      * the bitset before the instance could be leaked to multiple threads.
      ***/
-    public boolean and(NBSI dest, NBSI a, NBSI b) {
+    public boolean intersect(NBSI dest, NBSI a, NBSI b) {
       // terminate recursion if one bitset is missing data
       // since that word should be left as 0L anyway
       if(!has_bits(a) || !has_bits(b))
@@ -443,10 +442,10 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
         dest._bits[i] = (left & right) & Long.MAX_VALUE; // mask sign bit
       }
       // todo - recompute size
-      return and(dest._nbsi64,a._nbsi64,b._nbsi64);
+      return intersect(dest._nbsi64, a._nbsi64, b._nbsi64);
     }
 
-    public boolean or(NBSI dest, NBSI a, NBSI b) {
+    public boolean union(NBSI dest, NBSI a, NBSI b) {
       // terminate recursion if neiter bitset has data
       if(!has_bits(a) && !has_bits(b))
         return true;
@@ -457,8 +456,10 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
           dest._bits[i] = (left | right) & Long.MAX_VALUE;
         }
       }
-      return or(dest._nbsi64,a._nbsi64,b._nbsi64);
+      return union(dest._nbsi64, a._nbsi64, b._nbsi64);
     }
+
+    /**************************************************************************/
 
     private long safe_read_word(int i, long default_word) {
       if(i >= _bits.length) {
