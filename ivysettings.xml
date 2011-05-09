@@ -2,7 +2,7 @@
   <properties file="credentials.properties"/>
   <properties file="publish.properties"/>
   <settings defaultResolver="main"/>
-  <credentials host="maven.boundary.com" realm="Artifactory Realm" username="${username}" passwd="${password}"/>
+  <credentials host="maven.boundary.com" realm="Artifactory Realm" username="${user}" passwd="${password}"/>
   <resolvers>
     <chain name="main">
       <filesystem name="local">
