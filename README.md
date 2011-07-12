@@ -1,10 +1,13 @@
+High Scale Lib
+-------------
+
 This is Boundary's fork of Cliff Click's high scale lib.  We will be maintaining this fork with bug fixes, improvements and versioned builds in our public maven repository.  
 
 To use high scale lib from ivy add the following to your resolver chain in ivysettings.xml:
 
     <url name="boundary" m2compatible="true">
-      <artifact pattern="http://maven.boundary.com/repo/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]" />
-      <ivy pattern="http://maven.boundary.com/repo/[organization]/[module]/[revision]/ivy-[module].xml" />
+      <artifact pattern="http://maven.boundary.com/artifactory/repo/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]" />
+      <ivy pattern="http://maven.boundary.com/artifactory/repo/[organization]/[module]/[revision]/ivy-[module].xml" />
     </url>
   
 and declare the dependency in ivy.xml:
@@ -12,13 +15,13 @@ and declare the dependency in ivy.xml:
     <dependency
       org="com.boundary"
       name="high-scale-lib"
-      rev="1.0.2" />
+      rev="1.0.3" />
     
 From maven simply add the repository to the repositories element:
 
     <repository>
       <id>boundary-site</id>
-      <url>http://maven.boundary.com/repo</url>
+      <url>http://maven.boundary.com/artifactory/repo</url>
     </repository>
   
 and then add the dependency to the dependencies element:
@@ -26,7 +29,7 @@ and then add the dependency to the dependencies element:
     <dependency>
       <groupId>com.boundary</groupId>
       <artifactId>high-scale-lib</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3</version>
     </dependency>
 
 Original README
