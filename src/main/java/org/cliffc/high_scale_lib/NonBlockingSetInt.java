@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import sun.misc.Unsafe;
 
@@ -62,6 +61,10 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
   /** Create a new empty bit-vector */
   public NonBlockingSetInt( ) { 
     _nbsi = new NBSI(63, new Counter(), this); // The initial 1-word set
+  }
+
+  private NonBlockingSetInt(NonBlockingSetInt a, NonBlockingSetInt b) {
+    _nbsi = new NBSI(a._nbsi,b._nbsi,new Counter(),this);
   }
 
   /** 
@@ -133,6 +136,30 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       ;
   }
 
+  public int sizeInBytes() { return _nbsi.sizeInBytes(); }
+
+  /*****************************************************************
+   *
+   * bitwise comparisons optimised for NBSI
+   *
+   *****************************************************************/
+
+  public NonBlockingSetInt intersect(final NonBlockingSetInt op) {
+    NonBlockingSetInt res = new NonBlockingSetInt(this,op);
+    res._nbsi.intersect(res._nbsi, this._nbsi, op._nbsi);
+    return res;
+  }
+
+  public NonBlockingSetInt union(final NonBlockingSetInt op) {
+    NonBlockingSetInt res = new NonBlockingSetInt(this,op);
+    res._nbsi.union(res._nbsi, this._nbsi, op._nbsi);
+    return res;
+  }
+
+//  public NonBlockingSetInt not(final NonBlockingSetInt op) {
+//
+//  }
+
   /** Verbose printout of internal structure for debugging. */
   public void print() { _nbsi.print(0); }
 
@@ -142,36 +169,58 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    */
   public Iterator<Integer> iterator( ) { return new iter(); }
 
-  private class iter implements Iterator<Integer> {
-    NBSI _nbsi2;
-    int _idx  = -1;
-    int _prev = -1;
-    iter() { _nbsi2 = _nbsi; advance(); }
-    public boolean hasNext() { return _idx != -2; }
-    private void advance() {     
+  public IntIterator intIterator() { return new NBSIIntIterator(); }
+
+  private class NBSIIntIterator implements IntIterator {
+
+    NBSI nbsi;
+    int index = -1;
+    int prev  = -1;
+
+    NBSIIntIterator() {
+      nbsi = _nbsi;
+      advance();
+    }
+
+    private void advance() {
       while( true ) {
-        _idx++;                 // Next index
-        while( (_idx>>6) >= _nbsi2._bits.length ) { // Index out of range?
-          if( _nbsi2._new == null ) { // New table?
-            _idx = -2;          // No, so must be all done
-            return;             // 
+        index++;                 // Next index
+        while( (index>>6) >= nbsi._bits.length ) { // Index out of range?
+          if( nbsi._new == null ) { // New table?
+            index = -2;          // No, so must be all done
+            return;             //
           }
-          _nbsi2 = _nbsi2._new; // Carry on, in the new table
+          nbsi = nbsi._new; // Carry on, in the new table
         }
-        if( _nbsi2.contains(_idx) ) return;
+        if( nbsi.contains(index) ) return;
       }
     }
-    public Integer next() { 
-      if( _idx == -1 ) throw new NoSuchElementException();
-      _prev = _idx;
+    @Override
+    public int next() {
+      if( index == -1 ) throw new NoSuchElementException();
+      prev = index;
       advance();
-      return _prev;
+      return prev;
     }
-    public void remove() { 
-      if( _prev == -1 ) throw new IllegalStateException();
-      _nbsi2.remove(_prev);
-      _prev = -1;
+
+    @Override
+    public boolean hasNext() {
+      return index != -2;
     }
+
+    public void remove() {
+      if( prev == -1 ) throw new IllegalStateException();
+      nbsi.remove(prev);
+      prev = -1;
+    }
+  }
+
+  private class iter implements Iterator<Integer> {
+    NBSIIntIterator intIterator;
+    iter() { intIterator = new NBSIIntIterator(); }
+    public boolean hasNext() { return intIterator.hasNext(); }
+    public Integer next() { return intIterator.next(); }
+    public void remove() { intIterator.remove(); }
   }
 
   // --- writeObject -------------------------------------------------------
@@ -262,7 +311,42 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       _nbsi64 = ((max_elem+1)>>>6) == 0 ? null : new NBSI((max_elem+1)>>>6, null, null);
       _sum_bits_length = _bits.length + (_nbsi64==null ? 0 : _nbsi64._sum_bits_length);
     }
-    
+
+    /** built a new NBSI with buffers large enough to hold bitwise operations on the operands **/
+    private NBSI(NBSI a, NBSI b, Counter ctr, NonBlockingSetInt nonb) {
+      super();
+      _non_blocking_set_int = nonb;
+      _size = ctr;
+      _copyIdx  = ctr == null ? null : new AtomicInteger();
+      _copyDone = ctr == null ? null : new AtomicInteger();
+
+      if(!has_bits(a) && !has_bits(b)) {
+        _bits = null;
+        _nbsi64 = null;
+        _sum_bits_length = 0;
+        return;
+      }
+
+      // todo - clean this nastiness up
+      // essentially just safely creates new empty buffers for each of the recursive bitsets
+      if(!has_bits(a)) {
+        _bits = new long[b._bits.length];
+        _nbsi64 = new NBSI(null,b._nbsi64,null,null);
+      } else if(!has_bits(b)) {
+        _bits = new long[a._bits.length];
+        _nbsi64 = new NBSI(null,a._nbsi64,null,null);
+      } else {
+        int bit_length = a._bits.length > b._bits.length ? a._bits.length : b._bits.length;
+        _bits = new long[bit_length];
+        _nbsi64 = new NBSI(a._nbsi64,b._nbsi64,null,null);
+      }
+      _sum_bits_length = _bits.length + _nbsi64._sum_bits_length;
+    }
+
+    private static boolean has_bits(NBSI n) {
+      return n != null && n._bits != null;
+    }
+
     // Lower-case 'int' versions - no autoboxing, very fast.
     // 'i' is known positive.
     public boolean add( final int i ) {
@@ -338,7 +422,59 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       // Yes mutable: test & return bit
       return (old & mask) != 0; 
     }
-    
+
+    /**
+     * Bitwise operations which store the result in this instance.
+     * Assumes that this instance contains ample buffer space to store the largest
+     * buffer from each NBSI in the recursive bitmap.
+     *
+     * Also assumes that this method is called during the construction process of
+     * the bitset before the instance could be leaked to multiple threads.
+     ***/
+    public boolean intersect(NBSI dest, NBSI a, NBSI b) {
+      // terminate recursion if one bitset is missing data
+      // since that word should be left as 0L anyway
+      if(!has_bits(a) || !has_bits(b))
+        return true;
+      for(int i = 0; i < dest._bits.length; i++) {
+        long left   = a.safe_read_word(i,0L);
+        long right  = b.safe_read_word(i,0L);
+        dest._bits[i] = (left & right) & Long.MAX_VALUE; // mask sign bit
+      }
+      // todo - recompute size
+      return intersect(dest._nbsi64, a._nbsi64, b._nbsi64);
+    }
+
+    public boolean union(NBSI dest, NBSI a, NBSI b) {
+      // terminate recursion if neiter bitset has data
+      if(!has_bits(a) && !has_bits(b))
+        return true;
+      if(has_bits(a) || has_bits(b)) {
+        for(int i = 0; i < dest._bits.length; i++) {
+          long left   = a.safe_read_word(i,0);
+          long right  = b.safe_read_word(i,0);
+          dest._bits[i] = (left | right) & Long.MAX_VALUE;
+        }
+      }
+      return union(dest._nbsi64, a._nbsi64, b._nbsi64);
+    }
+
+    /**************************************************************************/
+
+    private long safe_read_word(int i, long default_word) {
+      if(i >= _bits.length) {
+        // allow reading past the end of the buffer filling in a default word
+        return default_word;
+      }
+      long word = _bits[i];
+      if(word < 0) {
+        word = help_copy_impl(i).help_copy()._bits[i];
+      }
+      return word;
+    }
+
+    public int sizeInBytes() { return (int)_bits.length; }
+
     public int size() { return (int)_size.get(); }
 
     // Must grow the current array to hold an element of size i
@@ -474,5 +610,5 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
         _new.print(d+1);
       }
     }
-  }    
+  }
 }

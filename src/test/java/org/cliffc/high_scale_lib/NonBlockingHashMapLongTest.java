@@ -1,6 +1,9 @@
+package org.cliffc.high_scale_lib;
+
 /*
  * Written by Cliff Click and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
+ * Additional test cases provided by Andy Martin of TeleAtlas.
  */
 
 import java.io.*;
@@ -8,95 +11,66 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 import junit.framework.TestCase;
-import org.cliffc.high_scale_lib.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-// Test NonBlockingHashMap via JUnit
-public class NBHM_Tester2 extends TestCase {
-  public static void main(String args[]) {
-    org.junit.runner.JUnitCore.main("Testing.NBHM_Tester.NBHM_Tester2");
-  }
+// Test NonBlockingHashMapLong via JUnit
+public class NonBlockingHashMapLongTest extends TestCase {
 
-  private NonBlockingHashMap<String,String> _nbhm;
-  protected void setUp   () { _nbhm = new NonBlockingHashMap<String,String>(); }
-  protected void tearDown() { _nbhm = null; }
-
-  // Throw a ClassCastException if I see a tombstone during key-compares
-  private static class KeyBonk {
-    final int _x;
-    KeyBonk( int i ) { _x=i; }
-    public boolean equals( Object o ) {
-      if( o == null ) return false;
-      return ((KeyBonk)o)._x    // Throw CCE here
-        == this._x; 
-    }
-    public int hashCode() { return (_x>>2); }
-    public String toString() { return "Bonk_"+Integer.toString(_x); }
-  }
+  private NonBlockingHashMapLong<String> _nbhml;
+  protected void setUp   () { _nbhml = new NonBlockingHashMapLong<String>(); }
+  protected void tearDown() { _nbhml = null; }
 
   // Test some basic stuff; add a few keys, remove a few keys
   public void testBasic() {
-    assertTrue ( _nbhm.isEmpty() );
-    assertThat ( _nbhm.putIfAbsent("k1","v1"), nullValue() );
+    assertTrue ( _nbhml.isEmpty() );
+    assertThat ( _nbhml.put(1,"v1"), nullValue() );
     checkSizes (1);
-    assertThat ( _nbhm.putIfAbsent("k2","v2"), nullValue() );
+    assertThat ( _nbhml.putIfAbsent(2,"v2"), nullValue() );
     checkSizes (2);
-    assertTrue ( _nbhm.containsKey("k2") );
-    assertThat ( _nbhm.put("k1","v1a"), is("v1") );
-    assertThat ( _nbhm.put("k2","v2a"), is("v2") );
+    assertTrue ( _nbhml.containsKey(2) );
+    assertThat ( _nbhml.put(1,"v1a"), is("v1") );
+    assertThat ( _nbhml.put(2,"v2a"), is("v2") );
     checkSizes (2);
-    assertThat ( _nbhm.putIfAbsent("k2","v2b"), is("v2a") );
-    assertThat ( _nbhm.remove("k1"), is("v1a") );
-    assertFalse( _nbhm.containsKey("k1") );
+    assertThat ( _nbhml.putIfAbsent(2,"v2b"), is("v2a") );
+    assertThat ( _nbhml.remove(1), is("v1a") );
+    assertFalse( _nbhml.containsKey(1) );
     checkSizes (1);
-    assertThat ( _nbhm.remove("k1"), nullValue() );
-    assertThat ( _nbhm.remove("k2"), is("v2a") );
+    assertThat ( _nbhml.remove(1), nullValue() );
+    assertThat ( _nbhml.remove(2), is("v2a") );
     checkSizes (0);
-    assertThat ( _nbhm.remove("k2"), nullValue() );
-    assertThat ( _nbhm.remove("k3"), nullValue() );
-    assertTrue ( _nbhm.isEmpty() );
+    assertThat ( _nbhml.remove(2), nullValue() );
+    assertThat ( _nbhml.remove("k3"), nullValue() );
+    assertTrue ( _nbhml.isEmpty() );
 
-    assertThat ( _nbhm.put("k0","v0"), nullValue() );
-    assertTrue ( _nbhm.containsKey("k0") );
+    assertThat ( _nbhml.put(0,"v0"), nullValue() );
+    assertTrue ( _nbhml.containsKey(0) );
     checkSizes (1);
-    assertThat ( _nbhm.remove("k0"), is("v0") );
-    assertFalse( _nbhm.containsKey("k0") );
+    assertThat ( _nbhml.remove(0), is("v0") );
+    assertFalse( _nbhml.containsKey(0) );
     checkSizes (0);
 
-    assertThat ( _nbhm.replace("k0","v0"), nullValue() );
-    assertFalse( _nbhm.containsKey("k0") );
-    assertThat ( _nbhm.put("k0","v0"), nullValue() );
-    assertEquals(_nbhm.replace("k0","v0a"), "v0" );
-    assertEquals(_nbhm.get("k0"), "v0a" );
-    assertThat ( _nbhm.remove("k0"), is("v0a") );
-    assertFalse( _nbhm.containsKey("k0") );
+    assertThat ( _nbhml.replace(0,"v0"), nullValue() );
+    assertFalse( _nbhml.containsKey(0) );
+    assertThat ( _nbhml.put(0,"v0"), nullValue() );
+    assertEquals(_nbhml.replace(0,"v0a"), "v0" );
+    assertEquals(_nbhml.get(0), "v0a" );
+    assertThat ( _nbhml.remove(0), is("v0a") );
+    assertFalse( _nbhml.containsKey(0) );
     checkSizes (0);
 
-    assertThat ( _nbhm.replace("k1","v1"), nullValue() );
-    assertFalse( _nbhm.containsKey("k1") );
-    assertThat ( _nbhm.put("k1","v1"), nullValue() );
-    assertEquals(_nbhm.replace("k1","v1a"), "v1" );
-    assertEquals(_nbhm.get("k1"), "v1a" );
-    assertThat ( _nbhm.remove("k1"), is("v1a") );
-    assertFalse( _nbhm.containsKey("k1") );
+    assertThat ( _nbhml.replace(1,"v1"), nullValue() );
+    assertFalse( _nbhml.containsKey(1) );
+    assertThat ( _nbhml.put(1,"v1"), nullValue() );
+    assertEquals(_nbhml.replace(1,"v1a"), "v1" );
+    assertEquals(_nbhml.get(1), "v1a" );
+    assertThat ( _nbhml.remove(1), is("v1a") );
+    assertFalse( _nbhml.containsKey(1) );
     checkSizes (0);
-
-    // Insert & Remove KeyBonks until the table resizes and we start
-    // finding Tombstone keys- and KeyBonk's equals-call with throw a
-    // ClassCastException if it sees a non-KeyBonk.
-    NonBlockingHashMap<KeyBonk,String> dumb = new NonBlockingHashMap<KeyBonk,String>();
-    for( int i=0; i<10000; i++ ) {
-      final KeyBonk happy1 = new KeyBonk(i);
-      assertThat( dumb.put(happy1,"and"), nullValue() );
-      if( (i&1)==0 )  dumb.remove(happy1);
-      final KeyBonk happy2 = new KeyBonk(i); // 'equals' but not '=='
-      dumb.get(happy2);
-    }
 
     // Simple insert of simple keys, with no reprobing on insert until the
     // table gets full exactly.  Then do a 'get' on the totally full table.
-    NonBlockingHashMap<Integer,Object> map = new NonBlockingHashMap<Integer,Object>(32);
+    NonBlockingHashMapLong<Object> map = new NonBlockingHashMapLong<Object>(32);
     for( int i = 1; i < 32; i++ )
       map.put(i, new Object());
     map.get(33);  // this causes a NPE
@@ -104,12 +78,12 @@ public class NBHM_Tester2 extends TestCase {
 
   // Check all iterators for correct size counts
   private void checkSizes(int expectedSize) {
-    assertEquals( "size()", _nbhm.size(), expectedSize );
-    Collection<String> vals = _nbhm.values();
+    assertEquals( "size()", _nbhml.size(), expectedSize );
+    Collection<String> vals = _nbhml.values();
     checkSizes("values()",vals.size(),vals.iterator(),expectedSize);
-    Set<String> keys = _nbhm.keySet();
+    Set<Long> keys = _nbhml.keySet();
     checkSizes("keySet()",keys.size(),keys.iterator(),expectedSize);
-    Set<Entry<String,String>> ents = _nbhm.entrySet();
+    Set<Entry<Long,String>> ents = _nbhml.entrySet();
     checkSizes("entrySet()",ents.size(),ents.iterator(),expectedSize);
   }
 
@@ -125,45 +99,58 @@ public class NBHM_Tester2 extends TestCase {
   }
 
 
+  public void testIterationBig2() {
+    final int CNT = 10000;
+    assertThat( _nbhml.size(), is(0) );
+    final String v = "v";
+    for( int i=0; i<CNT; i++ ) {
+      _nbhml.put(i,v);
+      String s = _nbhml.get(i);
+      assertThat( s, is(v) );
+    }
+    assertThat( _nbhml.size(), is(CNT) );
+  }
+
+
   public void testIteration() {
-    assertTrue ( _nbhm.isEmpty() );
-    assertThat ( _nbhm.put("k1","v1"), nullValue() );
-    assertThat ( _nbhm.put("k2","v2"), nullValue() );
+    assertTrue ( _nbhml.isEmpty() );
+    assertThat ( _nbhml.put(1,"v1"), nullValue() );
+    assertThat ( _nbhml.put(2,"v2"), nullValue() );
 
     String str1 = "";
-    for( Iterator<Map.Entry<String,String>> i = _nbhm.entrySet().iterator(); i.hasNext(); ) {
-      Map.Entry<String,String> e = i.next();
+    for( Iterator<Map.Entry<Long,String>> i = _nbhml.entrySet().iterator(); i.hasNext(); ) {
+      Map.Entry<Long,String> e = i.next();
       str1 += e.getKey();
     }
-    assertThat("found all entries",str1,anyOf(is("k1k2"),is("k2k1")));
+    assertThat("found all entries",str1,anyOf(is("12"),is("21")));
 
     String str2 = "";
-    for( Iterator<String> i = _nbhm.keySet().iterator(); i.hasNext(); ) {
-      String key = i.next();
+    for( Iterator<Long> i = _nbhml.keySet().iterator(); i.hasNext(); ) {
+      Long key = i.next();
       str2 += key;
     }
-    assertThat("found all keys",str2,anyOf(is("k1k2"),is("k2k1")));
+    assertThat("found all keys",str2,anyOf(is("12"),is("21")));
 
     String str3 = "";
-    for( Iterator<String> i = _nbhm.values().iterator(); i.hasNext(); ) {
+    for( Iterator<String> i = _nbhml.values().iterator(); i.hasNext(); ) {
       String val = i.next();
       str3 += val;
     }
     assertThat("found all vals",str3,anyOf(is("v1v2"),is("v2v1")));
 
-    assertThat("toString works",_nbhm.toString(), anyOf(is("{k1=v1, k2=v2}"),is("{k2=v2, k1=v1}")));
+    assertThat("toString works",_nbhml.toString(), anyOf(is("{1=v1, 2=v2}"),is("{2=v2, 1=v1}")));
   }
 
   public void testSerial() {
-    assertTrue ( _nbhm.isEmpty() );
-    assertThat ( _nbhm.put("k1","v1"), nullValue() );
-    assertThat ( _nbhm.put("k2","v2"), nullValue() );
+    assertTrue ( _nbhml.isEmpty() );
+    assertThat ( _nbhml.put(0x12345678L,"v1"), nullValue() );
+    assertThat ( _nbhml.put(0x87654321L,"v2"), nullValue() );
 
     // Serialize it out
     try {
-      FileOutputStream fos = new FileOutputStream("NBHM_test.txt");
+      FileOutputStream fos = new FileOutputStream("NBHML_test.txt");
       ObjectOutputStream out = new ObjectOutputStream(fos);
-      out.writeObject(_nbhm);
+      out.writeObject(_nbhml);
       out.close();
     } catch(IOException ex) {
       ex.printStackTrace();
@@ -171,67 +158,49 @@ public class NBHM_Tester2 extends TestCase {
 
     // Read it back
     try {
-      File f = new File("NBHM_test.txt");
+      File f = new File("NBHML_test.txt");
       FileInputStream fis = new FileInputStream(f);
       ObjectInputStream in = new ObjectInputStream(fis);
-      NonBlockingHashMap nbhm = (NonBlockingHashMap)in.readObject();
+      NonBlockingHashMapLong nbhml = (NonBlockingHashMapLong)in.readObject();
       in.close();
-      assertThat("serialization works",nbhm.toString(), anyOf(is("{k1=v1, k2=v2}"),is("{k2=v2, k1=v1}")));
+      assertEquals(_nbhml.toString(),nbhml.toString());
       if( !f.delete() ) throw new IOException("delete failed");
     } catch(IOException ex) {
       ex.printStackTrace();
     } catch(ClassNotFoundException ex) {
       ex.printStackTrace();
     }
-  }
 
-  public void testIterationBig2() {
-    final int CNT = 10000;
-    NonBlockingHashMap<Integer,String> nbhm = new NonBlockingHashMap<Integer,String>();
-    final String v = "v";
-    for( int i=0; i<CNT; i++ ) {
-      final Integer z = new Integer(i);
-      String s0 = nbhm.get(z);
-      assertThat( s0, nullValue() );
-      nbhm.put(z,v);
-      String s1 = nbhm.get(z);
-      assertThat( s1, is(v) );
-    }
-    assertThat( nbhm.size(), is(CNT) ); 
- }
+  }
 
   public void testIterationBig() {
     final int CNT = 10000;
-    assertThat( _nbhm.size(), is(0) );
+    assertThat( _nbhml.size(), is(0) );
     for( int i=0; i<CNT; i++ )
-      _nbhm.put("k"+i,"v"+i);
-    assertThat( _nbhm.size(), is(CNT) );
+      _nbhml.put(i,"v"+i);
+    assertThat( _nbhml.size(), is(CNT) );
 
     int sz =0;
     int sum = 0;
-    for( String s : _nbhm.keySet() ) {
+    for( long x : _nbhml.keySet() ) {
       sz++;
-      assertThat("",s.charAt(0),is('k'));
-      int x = Integer.parseInt(s.substring(1));
       sum += x;
       assertTrue(x>=0 && x<=(CNT-1));
     }
     assertThat("Found 10000 ints",sz,is(CNT));
     assertThat("Found all integers in list",sum,is(CNT*(CNT-1)/2));
 
-    assertThat( "can remove 3", _nbhm.remove("k3"), is("v3") );
-    assertThat( "can remove 4", _nbhm.remove("k4"), is("v4") );
+    assertThat( "can remove 3", _nbhml.remove(3), is("v3") );
+    assertThat( "can remove 4", _nbhml.remove(4), is("v4") );
     sz =0;
     sum = 0;
-    for( String s : _nbhm.keySet() ) {
+    for( long x : _nbhml.keySet() ) {
       sz++;
-      assertThat("",s.charAt(0),is('k'));
-      int x = Integer.parseInt(s.substring(1));
       sum += x;
       assertTrue(x>=0 && x<=(CNT-1));
-      String v = _nbhm.get(s);
+      String v = _nbhml.get(x);
       assertThat("",v.charAt(0),is('v'));
-      assertThat("",s.substring(1),is(v.substring(1)));
+      assertThat("",x,is(Long.parseLong(v.substring(1))));
     }
     assertThat("Found "+(CNT-2)+" ints",sz,is(CNT-2));
     assertThat("Found all integers in list",sum,is(CNT*(CNT-1)/2 - (3+4)));
@@ -239,47 +208,57 @@ public class NBHM_Tester2 extends TestCase {
 
   // Do some simple concurrent testing
   public void testConcurrentSimple() throws InterruptedException {
-    final NonBlockingHashMap<String,String> nbhm = new NonBlockingHashMap<String,String>();
+    final NonBlockingHashMapLong<String> nbhml = new NonBlockingHashMapLong<String>();
 
     // In 2 threads, add & remove even & odd elements concurrently
-    Thread t1 = new Thread() { public void run() { work_helper(nbhm,"T1",1); } };
-    t1.start();
-    work_helper(nbhm,"T0",0);
-    t1.join();
+    final int num_thrds = 2;
+    Thread ts[] = new Thread[num_thrds];
+    for( int i=1; i<num_thrds; i++ ) {
+      final int x = i;
+      ts[i] = new Thread() { public void run() { work_helper(nbhml,x,num_thrds); } };
+    }
+    for( int i=1; i<num_thrds; i++ )
+      ts[i].start();
+    work_helper(nbhml,0,num_thrds);
+    for( int i=1; i<num_thrds; i++ )
+      ts[i].join();
 
     // In the end, all members should be removed
     StringBuffer buf = new StringBuffer();
     buf.append("Should be emptyset but has these elements: {");
     boolean found = false;
-    for( String x : nbhm.keySet() ) {
+    for( long x : nbhml.keySet() ) {
       buf.append(" ").append(x);
       found = true;
     }
     if( found ) System.out.println(buf+" }");
-    assertThat( "concurrent size=0", nbhm.size(), is(0) );
-    for( String x : nbhm.keySet() ) {
+    assertThat( "concurrent size=0", nbhml.size(), is(0) );
+    for( long x : nbhml.keySet() ) {
       assertTrue("No elements so never get here",false);
     }
   }
 
-  void work_helper(NonBlockingHashMap<String,String> nbhm, String thrd, int d) {
+  void work_helper(NonBlockingHashMapLong<String> nbhml, int d, int num_thrds) {
+    String thrd = "T"+d;
     final int ITERS = 20000;
     for( int j=0; j<10; j++ ) {
-      long start = System.nanoTime();
-      for( int i=d; i<ITERS; i+=2 )
-        assertThat( "this key not in there, so putIfAbsent must work",
-                    nbhm.putIfAbsent("k"+i,thrd), is((String)null) );
-      for( int i=d; i<ITERS; i+=2 )
-        assertTrue( nbhm.remove("k"+i,thrd) );
-      double delta_nanos = System.nanoTime()-start;
-      double delta_secs = delta_nanos/1000000000.0;
-      double ops = ITERS*2;
-      //System.out.println("Thrd"+thrd+" "+(ops/delta_secs)+" ops/sec size="+nbhm.size());
+      //long start = System.nanoTime();
+      for( int i=d; i<ITERS; i+=num_thrds )
+        assertThat( "key "+i+" not in there, so putIfAbsent must work",
+                    nbhml.putIfAbsent((long)i,thrd), is((String)null) );
+      for( int i=d; i<ITERS; i+=num_thrds )
+        assertTrue( nbhml.remove((long)i,thrd) );
+      //double delta_nanos = System.nanoTime()-start;
+      //double delta_secs = delta_nanos/1000000000.0;
+      //double ops = ITERS*2;
+      //System.out.println("Thrd"+thrd+" "+(ops/delta_secs)+" ops/sec size="+nbhml.size());
     }
   }
 
+
+  // --- Customer Test Case 1 ------------------------------------------------
   public final void testNonBlockingHashMapSize() {
-    NonBlockingHashMap<Long,String> items = new NonBlockingHashMap<Long,String>();
+    NonBlockingHashMapLong<String> items = new NonBlockingHashMapLong<String>();
     items.put(Long.valueOf(100), "100");
     items.put(Long.valueOf(101), "101");
 
@@ -307,6 +286,7 @@ public class NBHM_Tester2 extends TestCase {
     assertTrue("entrySet().contains([101])", found101);
   }
 
+  // --- Customer Test Case 2 ------------------------------------------------
   // Concurrent insertion & then iterator test.
   static public void testNonBlockingHashMapIterator() throws InterruptedException {
     final int ITEM_COUNT1 = 1000;
@@ -314,7 +294,7 @@ public class NBHM_Tester2 extends TestCase {
     final int PER_CNT = ITEM_COUNT1/THREAD_COUNT;
     final int ITEM_COUNT = PER_CNT*THREAD_COUNT; // fix roundoff for odd thread counts
 
-    NonBlockingHashMap<Long,TestKey> nbhml = new NonBlockingHashMap<Long,TestKey>();
+    NonBlockingHashMapLong<TestKey> nbhml = new NonBlockingHashMapLong<TestKey>();
     // use a barrier to open the gate for all threads at once to avoid rolling
     // start and no actual concurrency
     final CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
@@ -341,11 +321,11 @@ public class NBHM_Tester2 extends TestCase {
   // the table.
   static private class NBHMLFeeder implements Callable<Object> {
     static private final Random _rand = new Random(System.currentTimeMillis());
-    private final NonBlockingHashMap<Long,TestKey> _map;
+    private final NonBlockingHashMapLong<TestKey> _map;
     private final int _count;
     private final CyclicBarrier _barrier;
     private final long _offset;
-    public NBHMLFeeder(final NonBlockingHashMap<Long,TestKey> map, final int count, final CyclicBarrier barrier, final long offset) {
+    public NBHMLFeeder(final NonBlockingHashMapLong<TestKey> map, final int count, final CyclicBarrier barrier, final long offset) {
       _map = map;
       _count = count;
       _barrier = barrier;
@@ -442,9 +422,9 @@ public class NBHM_Tester2 extends TestCase {
       _items.get(type).add(item);
     }
 
-    public NonBlockingHashMap<Long,TestKey> getMapMultithreaded() throws InterruptedException, ExecutionException {
+    public NonBlockingHashMapLong<TestKey> getMapMultithreaded() throws InterruptedException, ExecutionException {
       final int threadCount = _items.keySet().size();
-      final NonBlockingHashMap<Long,TestKey> map = new NonBlockingHashMap<Long,TestKey>();
+      final NonBlockingHashMapLong<TestKey> map = new NonBlockingHashMapLong<TestKey>();
 
       // use a barrier to open the gate for all threads at once to avoid rolling start and no actual concurrency
       final CyclicBarrier barrier = new CyclicBarrier(threadCount);
@@ -471,10 +451,10 @@ public class NBHM_Tester2 extends TestCase {
   // --- TestKeyFeederThread
   static private class TestKeyFeederThread implements Callable<Integer> {
     private final int _type;
-    private final NonBlockingHashMap<Long,TestKey> _map;
+    private final NonBlockingHashMapLong<TestKey> _map;
     private final List<TestKey> _items;
     private final CyclicBarrier _barrier;
-    public TestKeyFeederThread(final int type, final List<TestKey> items, final NonBlockingHashMap<Long,TestKey> map, final CyclicBarrier barrier) {
+    public TestKeyFeederThread(final int type, final List<TestKey> items, final NonBlockingHashMapLong<TestKey> map, final CyclicBarrier barrier) {
       _type = type;
       _map = map;
       _items = items;
@@ -505,7 +485,7 @@ public class NBHM_Tester2 extends TestCase {
     final int itemCount = feeder.size();
 
     // validate results
-    final NonBlockingHashMap<Long,TestKey> items = feeder.getMapMultithreaded();
+    final NonBlockingHashMapLong<TestKey> items = feeder.getMapMultithreaded();
     assertEquals("size()", itemCount, items.size());
 
     assertEquals("values().size()", itemCount, items.values().size());
@@ -525,128 +505,4 @@ public class NBHM_Tester2 extends TestCase {
     assertEquals("values().iterator() count", itemCount, iteratorCount);
   }
 
-  // --- Customer Test Case 4 ------------------------------------------------
-  static private class Test4 implements Runnable {
-    //
-    // Constants
-    //
-    static private final int THREADS = 4;
-    static private final int KEYS = 4;
-    static volatile private AssertionError AE;
-    //
-    // Instance Fields
-    //
-    private final ConcurrentMap<Integer,Integer> _map;
-    
-    //
-    // Constructor
-    //
-    private Test4(ConcurrentMap<Integer,Integer> map) { _map = map;  }
-
-    public void run() {
-      try {
-        // Run long enough to trigger compilations, etc
-        for( int i=0; i<100000 && AE==null; i++ ) 
-          pass();
-      } catch( AssertionError e ) {
-        AE = e;
-      }
-    }
-
-    private void pass() {
-      for( int i = 0    ; i < KEYS; i++)  increment(i);
-      for( int i = KEYS -1; i >= 0; i--)  decrement(i);
-    }
-
-    // increment count entry for given value, creating it of necessary
-    private void increment(int i) {
-      //Integer key = new Integer(i);
-      Integer key = Integer.valueOf(i);
-      while( AE==null ) {
-        // first assume no old count
-        //Integer oldValue = _map.putIfAbsent(key, new Integer(1));
-        Integer oldValue = _map.putIfAbsent(key, Integer.valueOf(1));
-        if (oldValue == null) // done, was no old entry and have made new entry with value 1
-          return;
-        
-        int newCount = oldValue.intValue() + 1;
-        if (newCount > THREADS) 
-          // shouldn't happen since can only be incremented at most once
-          // by each thread before corresponding decrement
-          throw new AssertionError("count for " + i + " incremented to " + newCount);
-        
-        //Integer newValue = new Integer(newCount);
-        Integer newValue = Integer.valueOf(newCount);
-        if (_map.replace(key, oldValue, newValue)) // done, have atomically incremented value by 1
-          return;
-      } // lost update race, retry
-    }
-    
-    // decrement count entry for given value, removing it if goes to zero
-    private void decrement(int i) {
-      //Integer key = new Integer(i);
-      Integer key = Integer.valueOf(i);
-      while( AE==null ) {
-        Integer oldValue = _map.get(key);
-        if (oldValue == null) 
-          // should not happen because of previous increment for same key
-          // but does - THIS IS THE BUG
-          throw new AssertionError("BUG REPRODUCED, MISSING COUNT FOR " + i );
-        
-        int newCount = oldValue.intValue() - 1;
-        if (newCount < 0 ) // shouldn't happen since each decrement preceded by a corresponding increment
-          throw new AssertionError("count for " + i + " decremented to " + newCount);
-        
-        if (newCount == 0) {
-          if (_map.remove(key, oldValue)) // done have atomically removed final 1 count
-            return;
-        } else {
-          //Integer newValue = new Integer(newCount);
-          Integer newValue = Integer.valueOf(newCount);
-          if (_map.replace(key, oldValue, newValue)) // done have atomically replace with count 1 lower
-            return;
-        }
-      } // lost update race, retry
-    }
-  }
-
-  // --- testConcurrentRemove
-  public void testConcurrentRemove() throws InterruptedException {
-    ConcurrentMap<Integer,Integer> map
-      // = new ConcurrentHashMap<Integer,Integer>();
-      = new NonBlockingHashMap<Integer,Integer>();
-    map.put   (Integer.valueOf(0),Integer.valueOf(1));
-    map.remove(Integer.valueOf(0));
-    
-    Test4.AE = null;
-    Thread[] ts = new Thread[Test4.THREADS];
-    for( int i = 0; i < Test4.THREADS; i++ )
-      (ts[i] = new Thread(new Test4(map), "thread " + i)).start();
-    // See if we handed due to a crash/bug
-    for( int i = 0; i < Test4.THREADS; i++ )
-      ts[i].join();
-    assertTrue( Test4.AE==null );
-  }
-
-  // This test is a copy of the JCK test Hashtable2027, which is incorrect.
-  // The test requires a particular order of values to appear in the esa
-  // array - but this is not part of the spec.  A different implementation
-  // might put the same values into the array but in a different order.
-  //public void testToArray() {
-  //  NonBlockingHashMap ht = new NonBlockingHashMap();
-  //
-  //  ht.put("Nine", new Integer(9));
-  //  ht.put("Ten", new Integer(10));
-  //  ht.put("Ten1", new Integer(100));
-  //
-  //  Collection es = ht.values();
-  //
-  //  Object [] esa = es.toArray();
-  //
-  //  ht.remove("Ten1");
-  //
-  //  assertEquals( "size check", es.size(), 2 );
-  //  assertEquals( "iterator_order[0]", new Integer( 9), esa[0] );
-  //  assertEquals( "iterator_order[1]", new Integer(10), esa[1] );
-  //}
 }

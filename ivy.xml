@@ -1,7 +1,8 @@
 <ivy-module version="2.0">
 	<info organisation="${organization}" module="${module}" revision="${version}"/>
-	
 	<dependencies>
-		
+    <dependency org="junit" name="junit" rev="4.8.2" >
+        <artifact name="junit" type="jar" conf="test"/>
+    </dependency>
 	</dependencies>
 </ivy-module>

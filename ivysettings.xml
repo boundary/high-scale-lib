@@ -1,21 +1,25 @@
 <ivysettings>
-	<properties file="credentials.properties"/>
-	<properties file="publish.properties"/>
-
-	<settings defaultResolver="main"/>
-	<credentials host="maven.boundary.com" realm="Artifactory Realm" username="${username}" passwd="${password}"/> 
-	<resolvers >
-	
-		<chain name="main">
-			<filesystem name="local">
-			  <ivy pattern="${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]" />
-			  <artifact pattern="${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]" />
-			</filesystem>
-			<url name="artifactory-publish" m2compatible="true">
-		        <artifact pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]" />
-		        <ivy pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/ivy-[module].xml" />
-		    </url>
-		    
-		</chain>
-	</resolvers>
+  <properties file="credentials.properties"/>
+  <properties file="publish.properties"/>
+  <settings defaultResolver="main"/>
+  <credentials host="maven.boundary.com" realm="Artifactory Realm" username="${username}" passwd="${password}"/>
+  <resolvers>
+    <chain name="main">
+      <filesystem name="local">
+        <ivy pattern="${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]"/>
+        <artifact
+                pattern="${ivy.default.ivy.user.dir}/local/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]"/>
+      </filesystem>
+      <url name="artifactory-external" m2compatible="true">
+        <artifact
+                pattern="http://maven.boundary.com/artifactory/repo/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
+        <ivy pattern="http://maven.boundary.com/artifactory/repo/[organization]/[module]/[revision]/ivy-[module].xml"/>
+      </url>
+      <url name="artifactory-publish" m2compatible="true">
+        <artifact
+                pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
+        <ivy pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/ivy-[module].xml"/>
+      </url>
+    </chain>
+  </resolvers>
 </ivysettings>
