@@ -21,6 +21,7 @@ public class NonBlockingSetIntTest extends TestCase {
     // on two others is sized appropriately initially
     NonBlockingSetInt a = new NonBlockingSetInt();
     NonBlockingSetInt b = new NonBlockingSetInt();
+    NonBlockingSetInt empty = new NonBlockingSetInt();
     int max = 10000;
 
     for(int i = 0; i < max; i++) {
@@ -29,8 +30,14 @@ public class NonBlockingSetIntTest extends TestCase {
       assertTrue(t.contains(i));
     }
 
+    int magic = 1213446;
+
+    a.add(magic);
+    NonBlockingSetInt c = a.union(empty);
+    assertTrue(c.contains(magic));
+
     // c should contain the empty set since a and b are disjoint
-    NonBlockingSetInt c = a.intersect(b);
+    c = a.intersect(b);
     NonBlockingSetInt d = b.intersect(a);
     for(int i = 0; i < max; i++) {
       assertFalse(c.contains(i));
@@ -42,6 +49,40 @@ public class NonBlockingSetIntTest extends TestCase {
     for(int i = 0; i < max; i++) {
       assertTrue(c.contains(i));
       assertTrue(d.contains(i));
+    }
+
+    c = a.union(empty);
+    d = empty.union(a);
+
+    IntIterator itr = a.intIterator();
+    while(itr.hasNext()) {
+      int next = itr.next();
+      assertTrue(c.contains(next));
+      assertTrue(d.contains(next));
+    }
+
+    itr = b.intIterator();
+    while(itr.hasNext()) {
+      int next = itr.next();
+      assertFalse(c.contains(next));
+      assertFalse(d.contains(next));
+    }
+
+    c = b.union(empty);
+    d = empty.union(b);
+
+    itr = b.intIterator();
+    while(itr.hasNext()) {
+      int next = itr.next();
+      assertTrue(c.contains(next));
+      assertTrue(d.contains(next));
+    }
+
+    itr = a.intIterator();
+    while(itr.hasNext()) {
+      int next = itr.next();
+      assertFalse(c.contains(next));
+      assertFalse(d.contains(next));
     }
 
     // just make sure the bitset is usable after building out an instance with an ample internal buffer
