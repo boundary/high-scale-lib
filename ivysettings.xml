@@ -20,6 +20,9 @@
                 pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]"/>
         <ivy pattern="http://maven.boundary.com/artifactory/external/[organization]/[module]/[revision]/ivy-[module].xml"/>
       </url>
+      <url name="ibiblio" m2compatible="true">
+        <artifact pattern="http://repo1.maven.org/maven2/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+      </url>
     </chain>
   </resolvers>
 </ivysettings>

@@ -11,6 +11,14 @@ import static org.junit.Assert.assertThat;
 
 public class NonBlockingSetIntTest extends TestCase {
 
+  public void testDerp() {
+    NonBlockingSetInt a = new NonBlockingSetInt();
+    NonBlockingSetInt b = new NonBlockingSetInt();
+    
+    a.add(1213446);
+    NonBlockingSetInt c = a.union(b);
+  }
+
   public void testSetOperations() {
     // add values to the following bitsets
     // 'a' will get all values divisible by 63
