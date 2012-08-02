@@ -30,11 +30,9 @@ public class NonBlockingSetIntTest extends TestCase {
       assertTrue(t.contains(i));
     }
 
-    int magic = 1213446;
-
-    a.add(magic);
+    a.add(1213446);
     NonBlockingSetInt c = a.union(empty);
-    assertTrue(c.contains(magic));
+    assertTrue(c.contains(1213446));
 
     // c should contain the empty set since a and b are disjoint
     c = a.intersect(b);
