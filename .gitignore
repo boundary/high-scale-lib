@@ -4,4 +4,9 @@
 bin/*
 lib/*
 build/*
+out
 credentials.properties
+.idea
+.idea/
+*.iml
+
