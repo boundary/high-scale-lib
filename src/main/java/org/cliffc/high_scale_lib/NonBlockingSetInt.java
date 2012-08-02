@@ -451,12 +451,12 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
         return true;
       if(has_bits(a) || has_bits(b)) {
         for(int i = 0; i < dest._bits.length; i++) {
-          long left   = a.safe_read_word(i,0);
-          long right  = b.safe_read_word(i,0);
+          long left   = a == null ? 0L : a.safe_read_word(i,0);
+          long right  = b == null ? 0L : b.safe_read_word(i,0);
           dest._bits[i] = (left | right) & Long.MAX_VALUE;
         }
       }
-      return union(dest._nbsi64, a._nbsi64, b._nbsi64);
+      return union(dest._nbsi64, a == null ? null : a._nbsi64, b == null ? null : b._nbsi64);
     }
 
     /**************************************************************************/
@@ -468,7 +468,11 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       }
       long word = _bits[i];
       if(word < 0) {
-        word = help_copy_impl(i).help_copy()._bits[i];
+        NBSI nb = help_copy_impl(i);
+        if(nb._non_blocking_set_int == null) {
+          return default_word;
+        }
+        word = nb.help_copy()._bits[i];
       }
       return word;
     }

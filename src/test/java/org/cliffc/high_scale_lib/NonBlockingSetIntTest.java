@@ -30,7 +30,7 @@ public class NonBlockingSetIntTest extends TestCase {
     NonBlockingSetInt a = new NonBlockingSetInt();
     NonBlockingSetInt b = new NonBlockingSetInt();
     NonBlockingSetInt empty = new NonBlockingSetInt();
-    int max = 10000;
+    int max = 20000000;
 
     for(int i = 0; i < max; i++) {
       NonBlockingSetInt t = (i&63) == 63 ? a : b;
@@ -38,12 +38,8 @@ public class NonBlockingSetIntTest extends TestCase {
       assertTrue(t.contains(i));
     }
 
-    a.add(1213446);
-    NonBlockingSetInt c = a.union(empty);
-    assertTrue(c.contains(1213446));
-
     // c should contain the empty set since a and b are disjoint
-    c = a.intersect(b);
+    NonBlockingSetInt c = a.intersect(b);
     NonBlockingSetInt d = b.intersect(a);
     for(int i = 0; i < max; i++) {
       assertFalse(c.contains(i));
