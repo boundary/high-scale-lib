@@ -6,7 +6,7 @@
   <groupId>com.boundary</groupId>
   <artifactId>high-scale-lib</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.3</version>
+  <version>1.0.4-SNAPSHOT</version>
 
   <!-- ===================================================================== -->
   <dependencies>
