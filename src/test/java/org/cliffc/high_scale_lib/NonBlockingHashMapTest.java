@@ -36,6 +36,7 @@ public class NonBlockingHashMapTest extends TestCase {
   // Test some basic stuff; add a few keys, remove a few keys
   public void testBasic() {
     assertTrue ( _nbhm.isEmpty() );
+    assertThat ( _nbhm.replace("k0","v0"), nullValue() );
     assertThat ( _nbhm.putIfAbsent("k1","v1"), nullValue() );
     checkSizes (1);
     assertThat ( _nbhm.putIfAbsent("k2","v2"), nullValue() );
