@@ -26,8 +26,8 @@ import  org.cliffc.high_scale_lib.NonBlockingHashtable;
  *
  * @since 1.5
  * @author Cliff Click
- * @param <TypeK> the type of keys maintained by this map
- * @param <TypeV> the type of mapped values
+ * @param <K> the type of keys maintained by this map
+ * @param <V> the type of mapped values
  */
 public class Hashtable<K, V> extends NonBlockingHashtable<K, V> {
   /** use serialVersionUID from JDK 1.0.2 for interoperability */

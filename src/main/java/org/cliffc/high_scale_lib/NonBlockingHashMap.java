@@ -17,7 +17,7 @@ import sun.misc.Unsafe;
  * with better scaling properties and generally lower costs to mutate the Map.
  * It provides identical correctness properties as ConcurrentHashMap.  All
  * operations are non-blocking and multi-thread safe, including all update
- * operations.  {@link NonBlockingHashMap} scales substatially better than
+ * operations.  {@link NonBlockingHashMap} scales substantially better than
  * {@link java.util.concurrent.ConcurrentHashMap} for high update rates, even with a
  * large concurrency factor.  Scaling is linear up to 768 CPUs on a 768-CPU
  * Azul box, even with 100% updates or 100% reads or any fraction in-between.
