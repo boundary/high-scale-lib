@@ -271,4 +271,16 @@ public class NonBlockingSetIntTest extends TestCase {
       //System.out.println("Thrd"+thrd+" "+(ops/delta_secs)+" ops/sec size="+nbsi.size());
     }
   }
+
+  public void testRetainAllNonBlocking() {
+    NonBlockingSetInt nonBlockingSetInt = new NonBlockingSetInt();
+    nonBlockingSetInt.add(1);
+    nonBlockingSetInt.add(2);
+    nonBlockingSetInt.add(3);
+    NonBlockingSetInt toRetain = new NonBlockingSetInt();
+    toRetain.add(1);
+    toRetain.add(3);
+    assertTrue(nonBlockingSetInt.retainAll(toRetain));
+    assertEquals(nonBlockingSetInt, toRetain);
+  }
 }
