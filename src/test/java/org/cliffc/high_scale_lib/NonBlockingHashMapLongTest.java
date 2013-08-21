@@ -505,4 +505,17 @@ public class NonBlockingHashMapLongTest extends TestCase {
     assertEquals("values().iterator() count", itemCount, iteratorCount);
   }
 
+  public void testLongIterator() {
+    NonBlockingHashMapLong<String> map = new NonBlockingHashMapLong<String>();
+    map.put(1L, "abc");
+    map.put(2L, "def");
+    LongIterator it = (LongIterator) map.keySet().iterator();
+    List<Long> keys = new ArrayList<Long>(2);
+    while (it.hasNext()) {
+      keys.add(it.nextLong());
+    }
+    Collections.sort(keys);
+    assertEquals(Arrays.asList(1L, 2L), keys);
+  }
+
 }

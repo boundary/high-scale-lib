@@ -1059,7 +1059,7 @@ public class NonBlockingHashMapLong<TypeV>
   /** A class which implements the {@link Iterator} and {@link Enumeration}
    *  interfaces, generified to the {@link Long} class and supporting a
    *  <strong>non-auto-boxing</strong> {@link #nextLong} function.  */
-  public class IteratorLong implements Iterator<Long>, Enumeration<Long> {
+  public class IteratorLong implements LongIterator, Enumeration<Long> {
     private final SnapshotV _ss;
     /** A new IteratorLong */
     public IteratorLong() { _ss = new SnapshotV(); }
