@@ -75,14 +75,14 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    */
   @Override
   public boolean addAll(Collection<? extends Integer> c) {
-    if (NonBlockingSetInt.class.equals(c.getClass())) {
-        boolean modified = false;
-        for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
-          modified |= add(it.next());
-        }
-        return modified;
+    if (!NonBlockingSetInt.class.equals(c.getClass())) {
+      return super.addAll(c);
     }
-    return super.addAll(c);
+    boolean modified = false;
+    for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+      modified |= add(it.next());
+    }
+    return modified;
   }
 
   /**
@@ -93,40 +93,43 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    */
   @Override
   public boolean removeAll(Collection<?> c) {
-    if (NonBlockingSetInt.class.equals(c.getClass())) {
-      boolean modified = false;
-      for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
-        modified |= remove(it.next());
-      }
-      return modified;
+    if (!NonBlockingSetInt.class.equals(c.getClass())) {
+      return super.removeAll(c);
     }
-    return super.removeAll(c);
+    boolean modified = false;
+    for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+      modified |= remove(it.next());
+    }
+    return modified;
   }
 
   @Override
   public boolean containsAll(Collection<?> c) {
-    if (NonBlockingSetInt.class.equals(c.getClass())) {
-      for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
-        if (!contains(it.next())) {
-          return false;
-        }
-      }
-      return true;
+    if (!NonBlockingSetInt.class.equals(c.getClass())) {
+      return super.containsAll(c);
     }
-    return super.containsAll(c);
+    for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+      if (!contains(it.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
   public boolean retainAll(Collection<?> c) {
-    if (NonBlockingSetInt.class.equals(c.getClass())) {
-      final NonBlockingSetInt nonBlockingSetInt = (NonBlockingSetInt) c;
-      for (final IntIterator it = intIterator(); it.hasNext(); ) {
-        if (!nonBlockingSetInt.contains(it.next())) {
-          it.remove();
-        }
+    if (!NonBlockingSetInt.class.equals(c.getClass())) {
+      return super.retainAll(c);
+    }
+    boolean modified = false;
+    final NonBlockingSetInt nonBlockingSetInt = (NonBlockingSetInt) c;
+    for (final IntIterator it = intIterator(); it.hasNext(); ) {
+      if (!nonBlockingSetInt.contains(it.next())) {
+        it.remove();
+        modified = true;
       }
     }
-    return super.retainAll(c);
+    return modified;
   }
 
   @Override
