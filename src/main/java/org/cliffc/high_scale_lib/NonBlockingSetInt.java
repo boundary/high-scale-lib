@@ -67,13 +67,85 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
     _nbsi = new NBSI(a._nbsi,b._nbsi,new Counter(),this);
   }
 
-  /** 
+  /**
+   * Overridden to avoid auto-boxing for NonBlockingSetInt.
+   *
+   * @param c The collection to add to this set.
+   * @return True if the set was modified.
+   */
+  @Override
+  public boolean addAll(Collection<? extends Integer> c) {
+    if (NonBlockingSetInt.class.equals(c.getClass())) {
+        boolean modified = false;
+        for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+          modified |= add(it.next());
+        }
+        return modified;
+    }
+    return super.addAll(c);
+  }
+
+  /**
+   * Overridden to avoid auto-boxing for NonBlockingSetInt.
+   *
+   * @param c The collection to remove from this set.
+   * @return True if the set was modified.
+   */
+  @Override
+  public boolean removeAll(Collection<?> c) {
+    if (NonBlockingSetInt.class.equals(c.getClass())) {
+      boolean modified = false;
+      for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+        modified |= remove(it.next());
+      }
+      return modified;
+    }
+    return super.removeAll(c);
+  }
+
+  @Override
+  public boolean containsAll(Collection<?> c) {
+    if (NonBlockingSetInt.class.equals(c.getClass())) {
+      for (final IntIterator it = ((NonBlockingSetInt)c).intIterator(); it.hasNext(); ) {
+        if (!contains(it.next())) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return super.containsAll(c);
+  }
+
+  @Override
+  public boolean retainAll(Collection<?> c) {
+    if (NonBlockingSetInt.class.equals(c.getClass())) {
+      final NonBlockingSetInt nonBlockingSetInt = (NonBlockingSetInt) c;
+      for (final IntIterator it = intIterator(); it.hasNext(); ) {
+        if (!nonBlockingSetInt.contains(it.next())) {
+          it.remove();
+        }
+      }
+    }
+    return super.retainAll(c);
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 0;
+    for (final IntIterator it = intIterator(); it.hasNext(); ) {
+      hashCode += it.next();
+    }
+    return hashCode;
+  }
+
+    /**
    * Add {@code i} to the set.  Uppercase {@link Integer} version of add,
    * requires auto-unboxing.  When possible use the {@code int} version of
    * {@link #add(int)} for efficiency.
    * @throws IllegalArgumentException if i is negative.
    * @return <tt>true</tt> if i was added to the set.
    */
+  @Override
   public boolean add ( final Integer i ) { 
     return add(i.intValue()); 
   }
@@ -84,8 +156,9 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    * efficiency.
    * @return <tt>true</tt> if i was in the set.
    */
+  @Override
   public boolean contains( final Object  o ) { 
-    return o instanceof Integer ? contains(((Integer)o).intValue()) : false; 
+    return o instanceof Integer && contains(((Integer) o).intValue());
   }
   /** 
    * Remove {@code o} from the set.  This is the uppercase {@link Integer}
@@ -94,8 +167,9 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    * efficiency.
    * @return <tt>true</tt> if i was removed to the set.
    */
+  @Override
   public boolean remove( final Object  o ) { 
-    return o instanceof Integer ? remove  (((Integer)o).intValue()) : false; 
+    return o instanceof Integer && remove(((Integer) o).intValue());
   }
 
   /** 
@@ -114,13 +188,13 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    * version of {@link #contains} - no autoboxing.
    * @return <tt>true</tt> if i was int the set.
    */
-  public boolean contains( final int i ) { return i<0 ? false : _nbsi.contains(i); }
+  public boolean contains( final int i ) { return i >= 0 && _nbsi.contains(i); }
   /** 
    * Remove {@code i} from the set.  This is the fast lower-case '{@code int}'
    * version of {@link #remove} - no autoboxing.
    * @return <tt>true</tt> if i was added to the set.
    */
-  public boolean remove  ( final int i ) { return i<0 ? false : _nbsi.remove  (i); }
+  public boolean remove  ( final int i ) { return i >= 0 && _nbsi.remove(i); }
   
   /** 
    * Current count of elements in the set.  Due to concurrent racing updates,
@@ -128,15 +202,34 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    * immediately visible to calling thread.
    * @return count of elements.
    */
+  @Override
   public int     size    (             ) { return _nbsi.size( );                   }
   /** Empty the bitvector. */
+  @Override
   public void    clear   (             ) { 
     NBSI cleared = new NBSI(63, new Counter(), this); // An empty initial NBSI
     while( !CAS_nbsi( _nbsi, cleared ) ) // Spin until clear works
       ;
   }
 
-  public int sizeInBytes() { return _nbsi.sizeInBytes(); }
+  @Override
+  public String toString() {
+    // Overloaded to avoid auto-boxing
+    final IntIterator it = intIterator();
+    if (!it.hasNext()) {
+      return "[]";
+    }
+    final StringBuilder sb = new StringBuilder().append('[');
+    for (;;) {
+      sb.append(it.next());
+      if (!it.hasNext()) {
+        return sb.append(']').toString();
+      }
+      sb.append(", ");
+    }
+  }
+
+    public int sizeInBytes() { return _nbsi.sizeInBytes(); }
 
   /*****************************************************************
    *
@@ -167,6 +260,7 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
    * Standard Java {@link Iterator}.  Not very efficient because it
    * auto-boxes the returned values.
    */
+  @Override
   public Iterator<Integer> iterator( ) { return new iter(); }
 
   public IntIterator intIterator() { return new NBSIIntIterator(); }
@@ -208,6 +302,7 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
       return index != -2;
     }
 
+    @Override
     public void remove() {
       if( prev == -1 ) throw new IllegalStateException();
       nbsi.remove(prev);
@@ -218,8 +313,11 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
   private class iter implements Iterator<Integer> {
     NBSIIntIterator intIterator;
     iter() { intIterator = new NBSIIntIterator(); }
+    @Override
     public boolean hasNext() { return intIterator.hasNext(); }
+    @Override
     public Integer next() { return intIterator.next(); }
+    @Override
     public void remove() { intIterator.remove(); }
   }
 
@@ -590,7 +688,7 @@ public class NonBlockingSetInt extends AbstractSet<Integer> implements Serializa
     }
 
     private void print(int d) {
-      StringBuffer buf = new StringBuffer();
+      StringBuilder buf = new StringBuilder();
       buf.append("NBSI - _bits.len=");
       NBSI x = this;
       while( x != null ) {
