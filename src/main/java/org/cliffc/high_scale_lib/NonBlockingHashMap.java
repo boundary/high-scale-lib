@@ -734,7 +734,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
     // to get the required memory orderings.  It monotonically transits from
     // null to set (once).
     volatile Object[] _newkvs;
-    private final AtomicReferenceFieldUpdater<CHM,Object[]> _newkvsUpdater =
+    private static final AtomicReferenceFieldUpdater<CHM,Object[]> _newkvsUpdater =
       AtomicReferenceFieldUpdater.newUpdater(CHM.class,Object[].class, "_newkvs");
     // Set the _next field if we can.
     boolean CAS_newkvs( Object[] newkvs ) {
