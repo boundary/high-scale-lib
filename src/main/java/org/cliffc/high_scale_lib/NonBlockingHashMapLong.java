@@ -4,23 +4,25 @@
  */
 
 package org.cliffc.high_scale_lib;
+import sun.misc.Unsafe;
+
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import sun.misc.Unsafe;
-import java.lang.reflect.*;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
- * A lock-free alternate implementation of {@link java.util.ConcurrentHashMap}
+ * A lock-free alternate implementation of {@link java.util.concurrent.ConcurrentHashMap}
  * with <strong>primitive long keys</strong>, better scaling properties and
  * generally lower costs.  The use of {@code long} keys allows for faster
  * compares and lower memory costs.  The Map provides identical correctness
  * properties as ConcurrentHashMap.  All operations are non-blocking and
  * multi-thread safe, including all update operations.  {@link
  * NonBlockingHashMapLong} scales substatially better than {@link
- * java.util.ConcurrentHashMap} for high update rates, even with a large
+ * java.util.concurrent.ConcurrentHashMap} for high update rates, even with a large
  * concurrency factor.  Scaling is linear up to 768 CPUs on a 768-CPU Azul
  * box, even with 100% updates or 100% reads or any fraction in-between.
  * Linear scaling up to all cpus has been observed on a 32-way Sun US2 box,
