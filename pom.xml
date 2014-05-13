@@ -11,7 +11,7 @@
   <groupId>com.boundary</groupId>
   <artifactId>high-scale-lib</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.6</version>
+  <version>1.0.7-SNAPSHOT</version>
   <name>high-scale-lib</name>
   <description>This is Boundary's fork of Cliff Click's high scale lib.  We will be maintaining this fork with bug fixes, improvements and versioned builds pushed to maven central.</description>
   <url>https://github.com/boundary/high-scale-lib</url>
