@@ -4,13 +4,15 @@
  */
 
 package org.cliffc.high_scale_lib;
+import sun.misc.Unsafe;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.*;
-import sun.misc.Unsafe;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * A lock-free alternate implementation of {@link java.util.concurrent.ConcurrentHashMap}
@@ -537,7 +539,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
       // needs to force a table-resize for a too-long key-reprobe sequence.
       // Check for too-many-reprobes on get - and flip to the new table.
       if( ++reprobe_cnt >= reprobe_limit(len) || // too many probes
-          key == TOMBSTONE ) // found a TOMBSTONE key, means no more keys in this table
+          K == TOMBSTONE ) // found a TOMBSTONE key, means no more keys in this table
         return newkvs == null ? null : get_impl(topmap,topmap.help_copy(newkvs),key,fullhash); // Retry in the new table
 
       idx = (idx+1)&(len-1);    // Reprobe by 1!  (could now prefetch)
@@ -609,7 +611,7 @@ public class NonBlockingHashMap<TypeK, TypeV>
       // up looking too soon.
       //topmap._reprobes.add(1);
       if( ++reprobe_cnt >= reprobe_limit(len) || // too many probes or
-          key == TOMBSTONE ) { // found a TOMBSTONE key, means no more keys
+          K == TOMBSTONE ) { // found a TOMBSTONE key, means no more keys
         // We simply must have a new table to do a 'put'.  At this point a
         // 'get' will also go to the new table (if any).  We do not need
         // to claim a key slot (indeed, we cannot find a free one to claim!).
