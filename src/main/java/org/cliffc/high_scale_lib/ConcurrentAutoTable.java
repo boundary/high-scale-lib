@@ -94,7 +94,7 @@ public class ConcurrentAutoTable implements Serializable {
   private long add_if_mask( long x, long mask ) { return _cat.add_if_mask(x,mask,hash(),this); }
 
   // The underlying array of concurrently updated long counters
-  private volatile CAT _cat = new CAT(null,4/*Start Small, Think Big!*/,0L);
+  private volatile CAT _cat = new CAT(null,8/*Start Small, Think Big!*/,0L);
   private static final AtomicReferenceFieldUpdater<ConcurrentAutoTable,CAT> _catUpdater =
     AtomicReferenceFieldUpdater.newUpdater(ConcurrentAutoTable.class,CAT.class, "_cat");
   private boolean CAS_cat( CAT oldcat, CAT newcat ) { return _catUpdater.compareAndSet(this,oldcat,newcat); }
@@ -107,7 +107,7 @@ public class ConcurrentAutoTable implements Serializable {
     // in the low bits.
     h ^= (h>>>20) ^ (h>>>12);   // Bit spreader, borrowed from Doug Lea
     h ^= (h>>> 7) ^ (h>>> 4);
-    return h<<2;                // Pad out cache lines.  The goal is to avoid cache-line contention
+    return h<<3;                // Pad out cache lines.  The goal is to avoid cache-line contention
   }
 
   // --- CAT -----------------------------------------------------------------
